@@ -8,7 +8,8 @@ import (
 
 	"github.com/flukis/inboice/services/infra/querier"
 	accountRegistration "github.com/flukis/inboice/services/internals/account_registration"
-	authentication "github.com/flukis/inboice/services/internals/auth"
+	"github.com/flukis/inboice/services/internals/authentication"
+	custommiddleware "github.com/flukis/inboice/services/internals/custom_middleware"
 	"github.com/flukis/inboice/services/utils/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -33,12 +34,14 @@ func main() {
 
 	// querier database
 	accountQuerier := querier.NewAccount(pool)
+	refreshTokenQuerier := querier.NewRefreshToken(pool)
 
 	// services
 	registrationSvc := accountRegistration.New(accountQuerier)
-	authenticationSvc := authentication.New(accountQuerier, cfg.JwtCfg.Secret, cfg.JwtCfg.RefreshExpTime, cfg.JwtCfg.AccessExpTime)
+	authenticationSvc := authentication.New(accountQuerier, refreshTokenQuerier, cfg.JwtCfg.Secret, cfg.JwtCfg.RefreshExpTime, cfg.JwtCfg.AccessExpTime)
 
 	r := chi.NewRouter()
+	custommiddleware.SetJwtSecret(cfg.JwtCfg.Secret)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 

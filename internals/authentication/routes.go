@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/flukis/inboice/services/domain"
+	custommiddleware "github.com/flukis/inboice/services/internals/custom_middleware"
 	httpresponse "github.com/flukis/inboice/services/utils/http_response"
 	"github.com/go-chi/chi/v5"
 )
@@ -20,6 +21,22 @@ func NewHttpHandler(svc RegisterAccount) *HttpHandler {
 
 func (h *HttpHandler) Route(r *chi.Mux) {
 	r.Post("/api/login", h.login)
+	r.Group(func(route chi.Router) {
+		route.Use(custommiddleware.AuthJwtMiddleware)
+		route.Get("/api/protected", h.protected)
+	})
+}
+
+func (h *HttpHandler) protected(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	ctx := r.Context()
+
+	key := custommiddleware.UserValueKey
+	data := ctx.Value(key).(*domain.MapClaimResponse)
+
+	httpresponse.WriteResponse(w, http.StatusOK, data.Email)
 }
 
 func (h *HttpHandler) login(

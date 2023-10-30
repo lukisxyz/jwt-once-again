@@ -7,11 +7,13 @@ import (
 	"github.com/flukis/inboice/services/domain"
 	"github.com/flukis/inboice/services/infra/querier"
 	"github.com/flukis/inboice/services/utils/hashing"
+	"github.com/flukis/inboice/services/utils/random"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type registerAccount struct {
 	query          querier.AccountQuerier
+	authQuery      querier.RefreshTokenQuerier
 	secret         string
 	refreshExpTime uint
 	accessExpTime  uint
@@ -32,21 +34,9 @@ func (r *registerAccount) Login(ctx context.Context, email, password string) (ac
 	}
 
 	refreshExpTime := time.Now().Add(time.Duration(r.refreshExpTime) * 24 * time.Hour)
-	refreshClaims := &domain.ClaimResponse{
-		ID:    acc.ID,
-		Name:  acc.Name,
-		Email: acc.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(refreshExpTime),
-		},
-	}
+
 	jwtKey := []byte(r.secret)
-	tokenRefresh := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	tokenRefreshString, errSign := tokenRefresh.SignedString(jwtKey)
-	if errSign != nil {
-		err = errSign
-		return
-	}
+	tokenRefreshString := random.RandString(24)
 
 	accessExpTime := time.Now().Add(time.Duration(r.accessExpTime) * time.Minute)
 	claims := &domain.ClaimResponse{
@@ -72,15 +62,24 @@ func (r *registerAccount) Login(ctx context.Context, email, password string) (ac
 		Scope:        "*",
 	}
 
-	account = &oauthToken
+	refreshToken := domain.NewRefreshToken(
+		acc.ID,
+		tokenRefreshString,
+		refreshExpTime,
+	)
 
-	return
+	_, err = r.authQuery.Save(ctx, &refreshToken)
+	if err != nil {
+		return
+	}
+
+	return &oauthToken, nil
 }
 
 type RegisterAccount interface {
 	Login(ctx context.Context, email, password string) (res *domain.LoginResponse, err error)
 }
 
-func New(query querier.AccountQuerier, secret string, refreshExpTime, accessExpTime uint) RegisterAccount {
-	return &registerAccount{query: query, secret: secret, refreshExpTime: refreshExpTime, accessExpTime: accessExpTime}
+func New(query querier.AccountQuerier, authQuery querier.RefreshTokenQuerier, secret string, refreshExpTime, accessExpTime uint) RegisterAccount {
+	return &registerAccount{query: query, authQuery: authQuery, secret: secret, refreshExpTime: refreshExpTime, accessExpTime: accessExpTime}
 }
