@@ -1,0 +1,10 @@
+listen:
+  host:
+  port:
+
+db:
+  db_name:
+  host:
+  port:
+  ssl_mode:
+  password:
