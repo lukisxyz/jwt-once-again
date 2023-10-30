@@ -2,7 +2,7 @@ package domain
 
 import (
 	"errors"
-	"net/mail"
+	"strings"
 	"time"
 
 	"github.com/flukis/inboice/services/utils/hashing"
@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	ErrAccountAlreadyDeleted         = errors.New("account: already deleted")
 	ErrAccountNotFound               = errors.New("account: not found")
 	ErrAccountEmailAlreadyRegistered = errors.New("account: email already registered")
 )
@@ -30,11 +31,8 @@ type Account struct {
 
 func NewAccount(email, password string) (Account, error) {
 	id := ulid.Make()
-	addr, err := mail.ParseAddress(email)
-	if err != nil {
-		return Account{}, err
-	}
-	username := addr.Name
+	at := strings.LastIndex(email, "@")
+	username := email[:at]
 	hashedPassword, err := hashing.HashPassword(password)
 	if err != nil {
 		return Account{}, err
@@ -49,4 +47,11 @@ func NewAccount(email, password string) (Account, error) {
 		CodeVerification: code,
 	}
 	return acc, nil
+}
+
+type GetAccountResponse struct {
+	Name            string    `json:"name"`
+	Email           string    `json:"email"`
+	EmailIsVerified bool      `json:"email_is_verified"`
+	ID              ulid.ULID `json:"id"`
 }

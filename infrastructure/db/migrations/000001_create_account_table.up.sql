@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     deleted_at TIMESTAMP,
     name VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     code_verification VARCHAR(255),
     email_verified_at TIMESTAMPTZ
 );
