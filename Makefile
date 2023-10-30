@@ -54,10 +54,10 @@ test.run:
 test: test.run test.coverage
 
 cmgr:
-	tmp/migrate create -ext sql -dir infrastructure/db/migrations -seq ${name}
+	tmp/migrate create -ext sql -dir infra/db/migrations -seq ${name}
 
 migup:
-	tmp/migrate -path infrastructure/db/migrations -database "${PSQL}" -verbose up
+	tmp/migrate -path infra/db/migrations -database "${PSQL}" -verbose up
 
 migdown:
-	tmp/migrate -path infrastructure/db/migrations -database "${PSQL}" -verbose down
+	tmp/migrate -path infra/db/migrations -database "${PSQL}" -verbose down

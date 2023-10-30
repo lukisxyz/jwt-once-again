@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	ErrPasswordNotMatch              = errors.New("login: wrong password")
 	ErrAccountAlreadyDeleted         = errors.New("account: already deleted")
 	ErrAccountNotFound               = errors.New("account: not found")
 	ErrAccountEmailAlreadyRegistered = errors.New("account: email already registered")

@@ -8,3 +8,8 @@ db:
   port:
   ssl_mode:
   password:
+
+jwt:
+  secret:
+  refresh_exp:
+  access_exp:

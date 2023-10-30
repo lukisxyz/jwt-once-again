@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/flukis/inboice/services/domain"
-	"github.com/flukis/inboice/services/infrastructure/querier"
+	"github.com/flukis/inboice/services/infra/querier"
 	"github.com/oklog/ulid/v2"
 )
 

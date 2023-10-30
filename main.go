@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flukis/inboice/services/infrastructure/querier"
+	"github.com/flukis/inboice/services/infra/querier"
 	accountRegistration "github.com/flukis/inboice/services/internals/account_registration"
+	authentication "github.com/flukis/inboice/services/internals/auth"
 	"github.com/flukis/inboice/services/utils/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -35,6 +36,7 @@ func main() {
 
 	// services
 	registrationSvc := accountRegistration.New(accountQuerier)
+	authenticationSvc := authentication.New(accountQuerier, cfg.JwtCfg.Secret, cfg.JwtCfg.RefreshExpTime, cfg.JwtCfg.AccessExpTime)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
@@ -43,6 +45,8 @@ func main() {
 	// router
 	accountRegistrationHandler := accountRegistration.NewHttpHandler(registrationSvc)
 	accountRegistrationHandler.Route(r)
+	authenticationHandler := authentication.NewHttpHandler(authenticationSvc)
+	authenticationHandler.Route(r)
 
 	// Run server instance.
 	log.Info().Msg("starting up server...")

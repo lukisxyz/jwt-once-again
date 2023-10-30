@@ -32,17 +32,20 @@ func loadEnvUint(key string, res *uint) {
 type config struct {
 	Listen listenConfig `yaml:"listen" json:"listen"`
 	DBCfg  pgConfig     `yaml:"db" json:"db"`
+	JwtCfg jwtConfig    `yaml:"jwt" json:"jwt"`
 }
 
 func (c *config) loadFromEnv() {
 	c.Listen.loadFromEnv()
 	c.DBCfg.loadFromEnv()
+	c.JwtCfg.loadFromEnv()
 }
 
 func defaultConfig() config {
 	return config{
 		Listen: defaultListenConfig(),
 		DBCfg:  defaultPgConfig(),
+		JwtCfg: defaultJwtConfig(),
 	}
 }
 
