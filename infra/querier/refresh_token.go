@@ -22,7 +22,7 @@ func (d *authDb) FindByUserId(ctx context.Context, id ulid.ULID) (*domain.Refres
 			user_id,
 			created_at,
 			expires_at,
-			user
+			revoked
 		FROM
 			refresh_tokens
 		WHERE
@@ -37,12 +37,12 @@ func (d *authDb) FindByUserId(ctx context.Context, id ulid.ULID) (*domain.Refres
 	)
 	var item domain.RefreshToken
 	if err := row.Scan(
-		item.ID,
-		item.TokenValue,
-		item.UserID,
-		item.CreatedAt,
-		item.ExpiresAt,
-		item.Revoked,
+		&item.ID,
+		&item.TokenValue,
+		&item.UserID,
+		&item.CreatedAt,
+		&item.ExpiresAt,
+		&item.Revoked,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			log.Debug().Err(err).Msg("can't find any item")
@@ -61,7 +61,7 @@ func (d *authDb) FindByToken(ctx context.Context, token string) (*domain.Refresh
 			user_id,
 			created_at,
 			expires_at,
-			user
+			revoked
 		FROM
 			refresh_tokens
 		WHERE
@@ -76,12 +76,12 @@ func (d *authDb) FindByToken(ctx context.Context, token string) (*domain.Refresh
 	)
 	var item domain.RefreshToken
 	if err := row.Scan(
-		item.ID,
-		item.TokenValue,
-		item.UserID,
-		item.CreatedAt,
-		item.ExpiresAt,
-		item.Revoked,
+		&item.ID,
+		&item.TokenValue,
+		&item.UserID,
+		&item.CreatedAt,
+		&item.ExpiresAt,
+		&item.Revoked,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			log.Debug().Err(err).Msg("can't find any item")
@@ -100,7 +100,7 @@ func (d *authDb) FindById(ctx context.Context, id ulid.ULID) (*domain.RefreshTok
 			user_id,
 			created_at,
 			expires_at,
-			user
+			revoked
 		FROM
 			refresh_tokens
 		WHERE
@@ -115,12 +115,12 @@ func (d *authDb) FindById(ctx context.Context, id ulid.ULID) (*domain.RefreshTok
 	)
 	var item domain.RefreshToken
 	if err := row.Scan(
-		item.ID,
-		item.TokenValue,
-		item.UserID,
-		item.CreatedAt,
-		item.ExpiresAt,
-		item.Revoked,
+		&item.ID,
+		&item.TokenValue,
+		&item.UserID,
+		&item.CreatedAt,
+		&item.ExpiresAt,
+		&item.Revoked,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			log.Debug().Err(err).Msg("can't find any item")

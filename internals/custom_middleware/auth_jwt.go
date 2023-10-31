@@ -36,7 +36,7 @@ func AuthJwtMiddleware(next http.Handler) http.Handler {
 			}
 
 			jwtToken := splittedToken[1]
-			claims := &domain.MapClaimResponse{}
+			claims := &domain.ClaimResponse{}
 
 			token, err := jwt.ParseWithClaims(
 				jwtToken,
@@ -56,7 +56,6 @@ func AuthJwtMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
-			claims = token.Claims.(*domain.MapClaimResponse)
 			c := context.WithValue(
 				ctx,
 				UserValueKey,

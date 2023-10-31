@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/flukis/inboice/services/domain"
@@ -9,6 +10,7 @@ import (
 	"github.com/flukis/inboice/services/utils/hashing"
 	"github.com/flukis/inboice/services/utils/random"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 type registerAccount struct {
@@ -17,6 +19,25 @@ type registerAccount struct {
 	secret         string
 	refreshExpTime uint
 	accessExpTime  uint
+}
+
+func (r *registerAccount) RefreshToken(ctx context.Context, uid ulid.ULID, name, email string) (accessToken string, err error) {
+	_, err = r.authQuery.FindByUserId(ctx, uid)
+	if err != nil {
+		return
+	}
+	jwtKey := []byte(r.secret)
+	accessExpTime := time.Now().Add(time.Duration(r.accessExpTime) * time.Second)
+	claims := &domain.ClaimResponse{
+		ID:    uid,
+		Name:  name,
+		Email: email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(accessExpTime),
+		},
+	}
+	tokenAccess := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return tokenAccess.SignedString(jwtKey)
 }
 
 func (r *registerAccount) Login(ctx context.Context, email, password string) (account *domain.LoginResponse, err error) {
@@ -33,12 +54,12 @@ func (r *registerAccount) Login(ctx context.Context, email, password string) (ac
 		return
 	}
 
-	refreshExpTime := time.Now().Add(time.Duration(r.refreshExpTime) * 24 * time.Hour)
+	refreshExpTime := time.Now().Add(time.Duration(r.refreshExpTime) * 24 * time.Second)
 
 	jwtKey := []byte(r.secret)
 	tokenRefreshString := random.RandString(24)
 
-	accessExpTime := time.Now().Add(time.Duration(r.accessExpTime) * time.Minute)
+	accessExpTime := time.Now().Add(time.Duration(r.accessExpTime) * time.Second)
 	claims := &domain.ClaimResponse{
 		ID:    acc.ID,
 		Name:  acc.Name,
@@ -68,16 +89,31 @@ func (r *registerAccount) Login(ctx context.Context, email, password string) (ac
 		refreshExpTime,
 	)
 
-	_, err = r.authQuery.Save(ctx, &refreshToken)
+	_, err = r.authQuery.FindByUserId(ctx, acc.ID)
+	if errors.Is(err, domain.ErrTokenNotFound) {
+		_, err = r.authQuery.Save(ctx, &refreshToken)
+		if err != nil {
+			return
+		}
+
+		return &oauthToken, nil
+	}
+	err = domain.ErrAlreadyLogin
+	return
+}
+
+func (r *registerAccount) Logout(ctx context.Context, uid ulid.ULID) (err error) {
+	currentData, err := r.authQuery.FindByUserId(ctx, uid)
 	if err != nil {
 		return
 	}
-
-	return &oauthToken, nil
+	return r.authQuery.Revoke(ctx, currentData.ID)
 }
 
 type RegisterAccount interface {
 	Login(ctx context.Context, email, password string) (res *domain.LoginResponse, err error)
+	Logout(ctx context.Context, uid ulid.ULID) (err error)
+	RefreshToken(ctx context.Context, uid ulid.ULID, name, email string) (accessToken string, err error)
 }
 
 func New(query querier.AccountQuerier, authQuery querier.RefreshTokenQuerier, secret string, refreshExpTime, accessExpTime uint) RegisterAccount {

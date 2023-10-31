@@ -48,7 +48,7 @@ func main() {
 	// router
 	accountRegistrationHandler := accountRegistration.NewHttpHandler(registrationSvc)
 	accountRegistrationHandler.Route(r)
-	authenticationHandler := authentication.NewHttpHandler(authenticationSvc)
+	authenticationHandler := authentication.NewHttpHandler(authenticationSvc, cfg.JwtCfg.Secret)
 	authenticationHandler.Route(r)
 
 	// Run server instance.

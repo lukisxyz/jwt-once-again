@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrTokenNotFound = errors.New("token: not found")
+	ErrAlreadyLogin  = errors.New("auth: already login")
 )
 
 type ClaimResponse struct {
@@ -17,13 +18,6 @@ type ClaimResponse struct {
 	Name  string    `json:"name"`
 	Email string    `json:"email"`
 	jwt.RegisteredClaims
-}
-
-type MapClaimResponse struct {
-	ID    ulid.ULID `json:"id"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
-	jwt.MapClaims
 }
 
 type LoginResponse struct {
